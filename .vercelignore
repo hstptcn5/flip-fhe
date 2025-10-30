@@ -1,0 +1,14 @@
+server.js
+frontend/serverFRONTEND.js
+node_modules
+cache
+artifacts
+deployments
+fhevmTemp
+types
+hardhat.config.ts
+contracts
+scripts
+tasks
+test
+
