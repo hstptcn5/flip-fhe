@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>🎲 FHE Heads or Tails</title>
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      :root{
+        --primary:#7c3aed; --secondary:#06b6d4; --accent:#22c55e; --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
+      }
+      body{
+        font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+        min-height:100vh; background:#0f0c29; color:#fff; overflow-x:hidden; position:relative;
+      }
+      body::before{content:"";position:fixed;inset:0;background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 30%,var(--bg3) 60%,#1a1a2e 100%);background-size:400% 400%;animation:gradientShift 20s ease infinite;z-index:-3;}
+      body::after{content:"";position:fixed;inset:0;background-image:radial-gradient(circle at 20% 20%, rgba(124,58,237,.15), transparent 40%),radial-gradient(circle at 80% 80%, rgba(6,182,212,.15), transparent 40%);z-index:-2;filter: blur(40px);}
+      @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+      .container{max-width:1200px;margin:2rem auto;padding:2rem;position:relative;z-index:1;}
+      .card{background:rgba(15,12,41,.55);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:2rem 2rem 2.2rem;box-shadow:0 20px 50px rgba(0,0,0,.45);position:relative;overflow:hidden}
+      .card::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:shimmer 5s infinite}
+      @keyframes shimmer{0%{left:-100%}50%{left:-100%}100%{left:100%}}
+      h1{font-size:clamp(1.8rem,2.8vw,2.4rem);font-weight:900;text-align:left;margin-bottom:1.6rem;letter-spacing:.5px;background:linear-gradient(135deg,#fff,#e9d5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+      .subtitle{text-align:left;color:rgba(255,255,255,.7);margin-top:-.6rem;margin-bottom:1.4rem}
+      .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+      .full{grid-column:1 / -1}
+      @media (max-width:820px){.row{grid-template-columns:1fr}}
+      .btn{width:100%;padding:1rem 1.2rem;border:none;border-radius:14px;font-size:1.05rem;font-weight:700;cursor:pointer;position:relative;overflow:hidden;transition:all .25s;letter-spacing:.4px}
+      .btn:disabled{opacity:.6;cursor:not-allowed}
+      .btn-primary{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;border:1px solid rgba(255,255,255,.2)}
+      .btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,.35)}
+      .btn-secondary{background:linear-gradient(135deg,#06b6d4,#0ea5e9);color:#fff;border:1px solid rgba(255,255,255,.2)}
+      .btn-secondary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px rgba(6,182,212,.35)}
+      .btn-ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.14)}
+      .btn-ghost:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 24px rgba(255,255,255,.12)}
+      .choice{display:flex;gap:1rem;}
+      .chip{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:1.4rem;text-align:center;font-weight:800;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease; position:relative; overflow:hidden}
+      .chip:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.25)}
+      .chip.active{background:linear-gradient(135deg,#22c55e33,#22c55e22);border-color:#22c55e;box-shadow:0 12px 28px rgba(34,197,94,.25);transform:translateY(-1px) scale(1.02)}
+      .chip .coin{display:flex;align-items:center;justify-content:center;width:120px;height:120px;margin:0 auto 1rem;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fafafa, #d1d5db);border:1px solid rgba(255,255,255,.25);box-shadow:inset 0 4px 12px rgba(0,0,0,.22), 0 10px 24px rgba(0,0,0,.24)}
+      .chip .coin img{max-width:100px;max-height:100px;filter: drop-shadow(0 6px 12px rgba(0,0,0,.3));}
+      .chip .label{display:block;font-weight:900;letter-spacing:.4px}
+      img[src=""], img:not([src]){display:none}
+      @keyframes pop { 0%{transform:scale(1)} 60%{transform:scale(1.08)} 100%{transform:scale(1.02)} }
+      @keyframes spin3d { 0%{transform:rotateY(0)} 100%{transform:rotateY(360deg)} }
+      .chip.pop{animation:pop .25s ease}
+      .chip .coin.spin{animation:spin3d .6s ease}
+      .status{padding:1rem;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);min-height:54px;display:flex;align-items:center;justify-content:center;margin-top:1rem;font-weight:600}
+      .result{margin-top:1rem;font-size:1.3rem;font-weight:900;text-align:center;padding:1.3rem;border-radius:16px;background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(99,102,241,.12));border:1px solid rgba(6,182,212,.35);backdrop-filter:blur(8px);min-height:64px}
+      .pill{display:inline-block;padding:.35rem .75rem;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);font-size:.85rem;margin-left:.5rem}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+      .loading::after{content:"";position:absolute;right:1rem;top:50%;transform:translateY(-50%);width:18px;height:18px;border:2px solid rgba(255,255,255,.35);border-top:2px solid #fff;border-radius:50%;animation:spin 1s linear infinite}
+      @keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+      .debug{font-family:"Fira Code","Courier New",monospace;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);padding:1rem;border-radius:12px;margin-top:1rem;color:#a7f3d0;max-height:220px;overflow:auto;font-size:.86rem}
+      .btn-sm{padding:.6rem .9rem;font-size:.95rem;border-radius:12px}
+      /* How it works modal */
+      .actions{position:absolute;right:1.2rem;top:1.2rem;display:flex;gap:.6rem}
+      .hiw-btn{padding:.55rem .9rem;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;font-weight:700;cursor:pointer}
+      .hiw-btn:hover{box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translateY(-1px)}
+      .connect-btn{padding:.55rem .9rem;border-radius:999px;background:linear-gradient(135deg,#6366f1,#7c3aed);border:1px solid rgba(255,255,255,.18);color:#fff;font-weight:700;cursor:pointer}
+      .connect-btn:hover{box-shadow:0 8px 24px rgba(124,58,237,.35);transform:translateY(-1px)}
+      .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);z-index:50}
+      .modal.show{display:flex}
+      .modal-card{max-width:560px;width:92%;background:rgba(15,12,41,.92);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:1.2rem 1.2rem 1.4rem;color:#fff;box-shadow:0 20px 50px rgba(0,0,0,.55);position:relative}
+      .modal-card h3{font-size:1.2rem;margin:0 0 .6rem 0}
+      .modal-card ol{margin:.4rem 0 0 1.1rem;}
+      .modal-card li{margin:.35rem 0}
+      .modal-close{position:absolute;right:.9rem;top:.9rem;background:transparent;border:none;color:#fff;font-size:1.2rem;cursor:pointer;opacity:.85}
+      .modal-close:hover{opacity:1}
+    </style>
+  </head>
+  <body>
+    <canvas id="bgGradient" aria-hidden="true"></canvas>
+    <div class="container">
+      <div class="card">
+        <div class="actions">
+          <button id="hiwOpen" class="hiw-btn">How it works</button>
+          <button id="connect" class="connect-btn"> Connect MetaMask</button>
+        </div>
+        <h1> FHE Heads or Tails</h1>
+        <p class="subtitle">Pick <b>Heads</b> or <b>Tails</b>, we encrypt your choice and compare with a <u>private on-chain</u> flip.</p>
+
+
+        <div class="row">
+          <div class="choice full" id="choiceRow">
+            <div id="pick0" class="chip active">
+              <div class="coin"><img id="imgHeads" src="" alt="Heads" /></div>
+              <span class="label">Heads <span class="pill">0</span></span>
+            </div>
+            <div id="pick1" class="chip">
+              <div class="coin"><img id="imgTails" src="" alt="Tails" /></div>
+              <span class="label">Tails <span class="pill">1</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="play" class="btn btn-secondary full" disabled> Play</button>
+        </div>
+
+        <div id="status" class="status">Login to Play</div>
+        <div id="result" class="result"></div>
+        <div class="row">
+          <button id="reveal" class="btn btn-ghost btn-sm" disabled> Reveal</button>
+          <button id="myLast" class="btn btn-ghost btn-sm" disabled> Last Result</button>
+        </div>
+        <pre id="debug" class="debug"></pre>
+      </div>
+    </div>
+
+    <!-- How it works Modal -->
+    <div id="hiwModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <button id="hiwClose" class="modal-close" aria-label="Close">✕</button>
+        <h3>How it works</h3>
+        <ol>
+          <li>Connect MetaMask on Sepolia.</li>
+          <li>Your choice (0=heads/1=tails) is encrypted locally.</li>
+          <li>Contract flips a private encrypted coin and compares.</li>
+          <li>Result becomes publicly decryptable and shown to you.</li>
+          <li>Optionally reveal the contract flip for that round.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Zama Relayer SDK (official) -->
+    <script type="module" crossorigin src="https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js"></script>
+    <!-- ethers v6 -->
+    <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/+esm"></script>
+
+    <script type="module">
+      import { BrowserProvider, Contract, getAddress } from "https://cdn.jsdelivr.net/npm/ethers@6.15.0/+esm";
+      import { initSDK, createInstance, SepoliaConfig } from "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js";
+      // ====== Animated Gradient Background ======
+      const gradientConfig = {
+        colors: [
+          { color: '#AD6C1F', enabled: true },
+          { color: '#4CB4BB', enabled: true },
+          { color: '#FFC600', enabled: true },
+          { color: '#835C51', enabled: true },
+          { color: '#836803', enabled: true },
+        ],
+        speed: 1,
+        horizontalPressure: 3,
+        verticalPressure: 10,
+        waveFrequencyX: 2,
+        waveFrequencyY: 4,
+        waveAmplitude: 8,
+        shadows: 1,
+        highlights: 5,
+        colorBrightness: 1,
+        colorSaturation: 7,
+        wireframe: false,
+        colorBlending: 8,
+        backgroundColor: '#003FFF',
+        backgroundAlpha: 1,
+        grainScale: 3,
+        grainSparsity: 0,
+        grainIntensity: 0.3,
+        grainSpeed: 5,
+        resolution: 1,
+        yOffset: 0,
+      };
+
+      // Interactive state
+      let selectionBiasX = 0; // -1 (heads/left) .. +1 (tails/right)
+      let burstUntil = 0; // timestamp for temporary speed/amplitude boost
+      let burstAmp = 0;   // 0..1 intensity
+      const pulses = [];  // {t0, x, y}
+
+      const bgCanvas = document.getElementById('bgGradient');
+      const ctx = bgCanvas.getContext('2d');
+      function resizeCanvas(){
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        bgCanvas.width  = Math.floor(window.innerWidth  * gradientConfig.resolution * dpr);
+        bgCanvas.height = Math.floor(window.innerHeight * gradientConfig.resolution * dpr);
+        bgCanvas.style.width = '100%';
+        bgCanvas.style.height = '100%';
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      // position canvas behind UI
+      Object.assign(bgCanvas.style, {
+        position: 'fixed', inset: '0', zIndex: '-1', pointerEvents: 'none'
+      });
+
+      // Utility: parse hex to rgb
+      function hexToRgb(hex){
+        const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : {r:0,g:0,b:0};
+      }
+
+      // Precompute palette
+      const palette = gradientConfig.colors.filter(c=>c.enabled).map(c=>hexToRgb(c.color));
+      if (palette.length === 0) palette.push(hexToRgb('#000000'));
+
+      // Simple multi-wave field + color blending
+      let t0 = performance.now();
+      function animate(){
+        const now = performance.now();
+        const t = (now - t0) / 1000;
+        const w = bgCanvas.width, h = bgCanvas.height;
+        // Burst easing (on Play): simple decay over 1.2s
+        const burstLeft = Math.max(0, burstUntil - now);
+        const burstK = burstLeft > 0 ? (burstLeft / 1200) : 0; // 0..1
+        const speed = (gradientConfig.speed + 2*burstK*burstAmp) * 0.15;
+        const amp = (gradientConfig.waveAmplitude + 6*burstK*burstAmp) * 0.8;
+        const fx = Math.max(0.5, gradientConfig.waveFrequencyX);
+        const fy = Math.max(0.5, gradientConfig.waveFrequencyY);
+
+        // background
+        const bg = hexToRgb(gradientConfig.backgroundColor);
+        ctx.fillStyle = `rgba(${bg.r},${bg.g},${bg.b},${gradientConfig.backgroundAlpha})`;
+        ctx.fillRect(0,0,w,h);
+
+        ctx.globalCompositeOperation = 'lighter';
+        const layers = Math.max(3, palette.length + gradientConfig.colorBlending);
+        for(let i=0;i<layers;i++){
+          const c = palette[i % palette.length];
+          const alpha = 0.06 + (i % 5) * 0.01;
+          ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${alpha})`;
+
+          const bias = selectionBiasX * (w * 0.12); // bias left/right based on selection
+          const cx = (w/2) + bias + Math.sin(t*speed*(0.6+i*0.07)) * (w*0.25) * (gradientConfig.horizontalPressure/5);
+          const cy = (h/2) + Math.cos(t*speed*(0.8+i*0.05)) * (h*0.28) * (gradientConfig.verticalPressure/5) + gradientConfig.yOffset;
+          const rad = Math.min(w,h) * (0.35 + 0.08*Math.sin(t*0.9+i));
+
+          const steps = 24;
+          ctx.beginPath();
+          for(let a=0; a<=steps; a++){
+            const ang = (a/steps) * Math.PI*2;
+            const r = rad + Math.sin(ang*fx + t*speed*1.3 + i)*amp + Math.cos(ang*fy + t*speed*1.1 - i)*amp*0.6;
+            const x = cx + Math.cos(ang)*r;
+            const y = cy + Math.sin(ang)*r;
+            a===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+
+        // Decrypt pulses
+        for (let i = pulses.length - 1; i >= 0; i--) {
+          const p = pulses[i];
+          const age = now - p.t0; // ms
+          const dur = 800;
+          if (age > dur) { pulses.splice(i,1); continue; }
+          const rr = (age / dur);
+          const r = Math.min(w,h) * rr * 0.6;
+          const a = 0.12 * (1 - rr);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI*2);
+          ctx.strokeStyle = `rgba(255,255,255,${a})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        // subtle grain
+        if (gradientConfig.grainIntensity > 0){
+          const gA = gradientConfig.grainIntensity * 0.14;
+          const count = Math.floor((w*h)/(1200 / Math.max(0.5, gradientConfig.grainScale)));
+          ctx.fillStyle = `rgba(255,255,255,${gA})`;
+          for(let i=0;i<count;i++){
+            const x = Math.random()*w, y = Math.random()*h;
+            ctx.fillRect(x,y,1,1);
+          }
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // ====== CONFIG ======
+      const CONTRACT_ADDRESS = "0xd22E7A123168C63f5efEA75d197faCbd0022791C"; // your deployed FHECoinFlip
+      const RELAYER_URL = "https://relayer.testnet.zama.cloud";
+      const GATEWAY_URL = "https://gateway.sepolia.zama.ai/";
+
+      const abi = [
+        { inputs:[{name:"choiceExt",type:"bytes32"},{name:"proof",type:"bytes"}], name:"play", outputs:[{name:"resultCt",type:"bytes32"}], stateMutability:"nonpayable", type:"function" },
+        { inputs:[], name:"getMyLastResultHandle", outputs:[{name:"",type:"bytes32"}], stateMutability:"view", type:"function" },
+        { inputs:[{name:"id",type:"uint256"}], name:"getRoundHandles", outputs:[{name:"player",type:"address"},{name:"choiceH",type:"bytes32"},{name:"flipH",type:"bytes32"},{name:"resultH",type:"bytes32"}], stateMutability:"view", type:"function" },
+        { inputs:[{name:"id",type:"uint256"}], name:"makeRandomPublic", outputs:[], stateMutability:"nonpayable", type:"function" },
+        { anonymous:false, inputs:[{indexed:true,name:"roundId",type:"uint256"},{indexed:true,name:"player",type:"address"},{indexed:false,name:"resultHandle",type:"bytes32"}], name:"RoundPlayed", type:"event" },
+        { anonymous:false, inputs:[{indexed:true,name:"roundId",type:"uint256"},{indexed:false,name:"randomHandle",type:"bytes32"}], name:"RandomCommitted", type:"event" },
+      ];
+
+      // ====== UI ======
+      const $ = (id) => document.getElementById(id);
+      const btnConnect = $("connect");
+      const btnPlay    = $("play");
+      const btnReveal  = $("reveal");
+      const btnMyLast  = $("myLast");
+      const statusEl   = $("status");
+      const resultEl   = $("result");
+      const debugEl    = $("debug");
+      const pick0      = $("pick0");
+      const pick1      = $("pick1");
+      const imgHeads   = $("imgHeads");
+      const imgTails   = $("imgTails");
+      const hiwOpen    = $("hiwOpen");
+      const hiwModal   = $("hiwModal");
+      const hiwClose   = $("hiwClose");
+
+      // Default assets paths (place your files in frontend/public/assets/)
+      if (imgHeads && !imgHeads.getAttribute('src')) imgHeads.src = "/assets/heads.png";
+      if (imgTails && !imgTails.getAttribute('src')) imgTails.src = "/assets/tails.png";
+
+      let selected = 0; // 0=heads, 1=tails
+      function setPick(v){
+        selected = v;
+        pick0.classList.toggle("active", v===0);
+        pick1.classList.toggle("active", v===1);
+        // micro animations
+        const a = v===0 ? pick0 : pick1;
+        const b = v===0 ? pick1 : pick0;
+        a.classList.remove('pop'); void a.offsetWidth; a.classList.add('pop');
+        const coin = a.querySelector('.coin');
+        if (coin){ coin.classList.remove('spin'); void coin.offsetWidth; coin.classList.add('spin'); }
+        const otherCoin = b.querySelector('.coin');
+        if (otherCoin) otherCoin.classList.remove('spin');
+        // bias gradient toward selection (left=heads, right=tails)
+        selectionBiasX = v===0 ? -1 : +1;
+      }
+      pick0.onclick = () => setPick(0);
+      pick1.onclick = () => setPick(1);
+
+      let provider, signer, user, instance, contract; // relayer instance
+      let lastRoundId = null;
+
+      function log(msg){ const line = `[${new Date().toLocaleTimeString()}] ${msg}`; console.log(line); debugEl.textContent += line + "\n"; debugEl.scrollTop = debugEl.scrollHeight; }
+      function setStatus(text){ statusEl.textContent = text; }
+      function setResult(html){ resultEl.innerHTML = html; }
+      function setBusy(btn, busy){ btn.classList.toggle("loading", !!busy); btn.disabled = !!busy; }
+
+      // ====== Helpers ======
+      const SEPOLIA_ID_HEX = "0xaa36a7"; // 11155111
+      const SEPOLIA_ID_BIG = 11155111n;
+      async function ensureSepolia(){
+        const chainId = await window.ethereum.request({ method:"eth_chainId" });
+        if (BigInt(chainId) !== SEPOLIA_ID_BIG) {
+          try { await window.ethereum.request({ method:"wallet_switchEthereumChain", params:[{ chainId: SEPOLIA_ID_HEX }] }); }
+          catch(e){ if(e?.code===4902){ await window.ethereum.request({ method:"wallet_addEthereumChain", params:[{ chainId: SEPOLIA_ID_HEX, chainName:"Sepolia", nativeCurrency:{name:"SepoliaETH",symbol:"SEP",decimals:18}, rpcUrls:["https://sepolia.infura.io/v3/"], blockExplorerUrls:["https://sepolia.etherscan.io"] }] }); } else { throw e; } }
+        }
+      }
+
+      if (window.ethereum?.on) {
+        window.ethereum.on("chainChanged", () => window.location.reload());
+        window.ethereum.on("accountsChanged", () => window.location.reload());
+      }
+
+      // ====== Connect ======
+      btnConnect.onclick = async () => {
+        try {
+          setBusy(btnConnect, true);
+          if (!window.ethereum) throw new Error("MetaMask not found");
+          await ensureSepolia();
+
+          provider = new BrowserProvider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = await provider.getSigner();
+          user = await signer.getAddress();
+          const net = await provider.getNetwork();
+          if (net.chainId !== SEPOLIA_ID_BIG) throw new Error("Please switch to Sepolia");
+
+          setStatus(`✅ Connected: ${user.slice(0,6)}...${user.slice(-4)}`);
+          btnConnect.textContent = ` Connected: ${user.slice(0,6)}...${user.slice(-4)}`;
+          btnConnect.disabled = true;
+          btnPlay.disabled = false; btnMyLast.disabled = false;
+
+          // Init Relayer SDK
+          log("Initializing Relayer SDK...");
+          await initSDK();
+          instance = await createInstance({
+            ...SepoliaConfig,
+            network: window.ethereum,
+            relayerUrl: RELAYER_URL,
+            gatewayUrl: GATEWAY_URL,
+            debug: true,
+          });
+          log("Relayer ready ✅");
+
+          // Contract
+          contract = new Contract(CONTRACT_ADDRESS, abi, signer);
+          log(`Contract OK: ${CONTRACT_ADDRESS}`);
+        } catch (e) {
+          setStatus("❌ Connect error: " + (e?.message || e));
+          console.error(e);
+        } finally { setBusy(btnConnect, false); }
+      };
+
+      // ====== Play ======
+      btnPlay.onclick = async () => {
+        // trigger burst animation
+        burstUntil = performance.now() + 1200; burstAmp = 1;
+        if (!contract || !instance || !signer) { setStatus("❌ Connect MetaMask first"); return; }
+        setBusy(btnPlay, true); setResult(""); setStatus("⏳ Encrypting choice & flipping...");
+        try {
+          // 1) Encrypt choice (uint8: 0/1)
+          function toHex(u8){ return '0x' + Array.from(u8).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+          const buf = instance.createEncryptedInput(getAddress(CONTRACT_ADDRESS), getAddress(user));
+          buf.add8(selected);
+          const { handles, inputProof } = await buf.encrypt();
+          const choiceExt = typeof handles[0] === 'string' ? handles[0] : toHex(handles[0]);
+          const proof = typeof inputProof === 'string' ? inputProof : toHex(inputProof);
+          log(`Encrypted choice -> handle=${choiceExt}`);
+          log(`Encrypted choice -> handle=${choiceExt}`);
+
+          // 2) Call play(...)
+          const tx = await contract.play(choiceExt, proof, { gasLimit: 1_200_000 });
+          log(`txHash=${tx.hash}`);
+          const receipt = await tx.wait();
+
+          // 3) Pull result handle from event
+          let resultHandle = null; let roundId = null;
+          for (const lg of receipt.logs) {
+            try {
+              const parsed = contract.interface.parseLog(lg);
+              if (parsed?.name === "RoundPlayed") { roundId = parsed.args.roundId; resultHandle = parsed.args.resultHandle; break; }
+            } catch(_){}
+          }
+          if (!resultHandle) { // fallback to view
+            resultHandle = await contract.getMyLastResultHandle();
+            log(`Fallback handle from getMyLastResultHandle(): ${resultHandle}`);
+          } else { log(`RoundPlayed: id=${roundId} handle=${resultHandle}`); }
+          lastRoundId = roundId ?? lastRoundId;
+
+          // 4) Public decrypt (contract already made result public)
+          const dec = await instance.publicDecrypt([resultHandle]);
+          log(`publicDecrypt(result) -> type=${typeof dec}, isArray=${Array.isArray(dec)}, keys=${dec && typeof dec==='object' ? Object.keys(dec)[0] : ''}`);
+          let v;
+          if (Array.isArray(dec) || (dec && typeof dec.length === 'number')) v = dec[0];
+          else if (dec && typeof dec === 'object') {
+            v = dec[resultHandle] ?? dec[(resultHandle||'').toLowerCase?.()] ?? dec[(resultHandle||'').toUpperCase?.()];
+            if (v === undefined && dec.plaintexts) v = dec.plaintexts[0];
+            if (v === undefined) { const k = Object.keys(dec)[0]; v = dec[k]; }
+          } else if (typeof dec === 'bigint' || typeof dec === 'number') v = dec;
+          if (typeof v === 'bigint') v = Number(v);
+          if (typeof v === 'string') { const n = Number(v); if (!Number.isNaN(n)) v = n; }
+          if (v === undefined || Number.isNaN(v)) { setStatus('❌ Decryption failed'); setResult('<span class="pill">result=undefined</span>'); return; }
+          const verdict = v===1 ? "🏆 You WON!" : v===0 ? "😿 You lost" : "⚠️ Invalid input (use 0 or 1)";
+          setResult(`${verdict} <span class="pill">result=${v}</span>`);
+          setStatus("✅ Result decrypted");
+          // pulse to indicate public decrypt
+          pulses.push({ t0: performance.now(), x: bgCanvas.width/2, y: bgCanvas.height*0.6 });
+
+          // Enable reveal if we have a round id
+          if (lastRoundId !== null && lastRoundId !== undefined) btnReveal.disabled = false;
+        } catch (e) {
+          setStatus(`❌ Play error: ${e?.reason || e?.message || e}`);
+          console.error(e);
+        } finally { setBusy(btnPlay, false); }
+      };
+
+      // ====== My last result (view + decrypt) ======
+      btnMyLast.onclick = async () => {
+        if (!contract || !instance) return setStatus("❌ Connect first");
+        setBusy(btnMyLast, true); setResult(""); setStatus("🔓 Fetching last result...");
+        try {
+          const handle = await contract.getMyLastResultHandle();
+          if (handle === "0x" + "0".repeat(64)) { setStatus("ℹ️ No previous rounds"); setBusy(btnMyLast,false); return; }
+          const dec = await instance.publicDecrypt([handle]);
+          log(`publicDecrypt(myLast) -> type=${typeof dec}, isArray=${Array.isArray(dec)}, keys=${dec && typeof dec==='object' ? Object.keys(dec)[0] : ''}`);
+          let v;
+          if (Array.isArray(dec) || (dec && typeof dec.length === 'number')) v = dec[0];
+          else if (dec && typeof dec === 'object') {
+            v = dec[handle] ?? dec[(handle||'').toLowerCase?.()] ?? dec[(handle||'').toUpperCase?.()];
+            if (v === undefined && dec.plaintexts) v = dec.plaintexts[0];
+            if (v === undefined) { const k = Object.keys(dec)[0]; v = dec[k]; }
+          } else if (typeof dec === 'bigint' || typeof dec === 'number') v = dec;
+          if (typeof v === 'bigint') v = Number(v);
+          if (typeof v === 'string') { const n = Number(v); if (!Number.isNaN(n)) v = n; }
+          if (v === undefined || Number.isNaN(v)) { setStatus('❌ Decryption failed'); setResult('<span class="pill">result=undefined</span>'); return; }
+          const verdict = v===1 ? "🏆 You WON!" : v===0 ? "😿 You lost" : "⚠️ Invalid input";
+          setResult(`${verdict} <span class=\"pill\">result=${v}</span>`);
+          setStatus("✅ Last result decrypted");
+        } catch (e) {
+          setStatus(`❌ Error: ${e?.message || e}`);
+          console.error(e);
+        } finally { setBusy(btnMyLast, false); }
+      };
+
+      // ====== Reveal contract flip ======
+      btnReveal.onclick = async () => {
+        if (!contract || !instance) return setStatus("❌ Connect first");
+        if (lastRoundId == null) return setStatus("ℹ️ Play first to get a round id");
+        setBusy(btnReveal, true); setStatus("✨ Making flip public & decrypting...");
+        try {
+          const tx = await contract.makeRandomPublic(lastRoundId, { gasLimit: 300_000 });
+          await tx.wait();
+          const [player, choiceH, flipH, resultH] = await contract.getRoundHandles(lastRoundId);
+          const dec = await instance.publicDecrypt([flipH]);
+          log(`publicDecrypt(flip) -> type=${typeof dec}, isArray=${Array.isArray(dec)}, keys=${dec && typeof dec==='object' ? Object.keys(dec)[0] : ''}`);
+          let fv;
+          if (Array.isArray(dec) || (dec && typeof dec.length === 'number')) fv = dec[0];
+          else if (dec && typeof dec === 'object') {
+            fv = dec[flipH] ?? dec[(flipH||'').toLowerCase?.()] ?? dec[(flipH||'').toUpperCase?.()];
+            if (fv === undefined && dec.plaintexts) fv = dec.plaintexts[0];
+            if (fv === undefined) { const k = Object.keys(dec)[0]; fv = dec[k]; }
+          } else if (typeof dec === 'bigint' || typeof dec === 'number') fv = dec;
+          if (typeof fv === 'bigint') fv = Number(fv);
+          if (typeof fv === 'string') { const n = Number(fv); if (!Number.isNaN(n)) fv = n; }
+          if (fv === undefined || Number.isNaN(fv)) { setStatus('❌ Decryption failed'); setResult('<span class="pill">flip=undefined</span>'); return; }
+          const coin = fv===0 ? "🪙 Heads (0)" : fv===1 ? "🦅 Tails (1)" : `? (${fv})`;
+          setResult(`Contract flip was: <b>${coin}</b> <span class=\"pill\">round #${lastRoundId}</span>`);
+          setStatus("✅ Flip revealed");
+        } catch (e) {
+          setStatus(`❌ Reveal error: ${e?.message || e}`);
+          console.error(e);
+        } finally { setBusy(btnReveal, false); }
+      };
+
+      // ====== How it works modal ======
+      function openHIW(){ hiwModal.classList.add('show'); hiwModal.setAttribute('aria-hidden','false'); }
+      function closeHIW(){ hiwModal.classList.remove('show'); hiwModal.setAttribute('aria-hidden','true'); }
+      hiwOpen?.addEventListener('click', openHIW);
+      hiwClose?.addEventListener('click', closeHIW);
+      hiwModal?.addEventListener('click', (e)=>{ if(e.target===hiwModal) closeHIW(); });
+      window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeHIW(); });
+    </script>
+  </body>
+</html>

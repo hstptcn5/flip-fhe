@@ -1,0 +1,73 @@
+{
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        { "indexed": true,  "internalType": "uint256", "name": "roundId", "type": "uint256" },
+        { "indexed": false, "internalType": "bytes32", "name": "randomHandle", "type": "bytes32" }
+      ],
+      "name": "RandomCommitted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        { "indexed": true,  "internalType": "uint256", "name": "roundId", "type": "uint256" },
+        { "indexed": true,  "internalType": "address", "name": "player", "type": "address" },
+        { "indexed": false, "internalType": "bytes32", "name": "resultHandle", "type": "bytes32" }
+      ],
+      "name": "RoundPlayed",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "getMyLastResultHandle",
+      "outputs": [ { "internalType": "bytes32", "name": "", "type": "bytes32" } ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [ { "internalType": "uint256", "name": "id", "type": "uint256" } ],
+      "name": "getRoundHandles",
+      "outputs": [
+        { "internalType": "address", "name": "player",  "type": "address" },
+        { "internalType": "bytes32", "name": "choiceH", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "flipH",   "type": "bytes32" },
+        { "internalType": "bytes32", "name": "resultH", "type": "bytes32" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [ { "internalType": "uint256", "name": "id", "type": "uint256" } ],
+      "name": "makeRandomPublic",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "externalEuint8", "name": "choiceExt", "type": "bytes32" },
+        { "internalType": "bytes",          "name": "proof",     "type": "bytes" }
+      ],
+      "name": "play",
+      "outputs": [ { "internalType": "euint8", "name": "resultCt", "type": "bytes32" } ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "roundsCount",
+      "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "version",
+      "outputs": [ { "internalType": "string", "name": "", "type": "string" } ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ]
+}
