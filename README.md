@@ -1,15 +1,16 @@
-# 🎲 ZAMA FHE Coin Flip (FHEVM, Sepolia)
+# FHE Coin Flip (FHEVM, Sepolia)
 
 **Private “Heads or Tails” on-chain** built with Zama’s FHEVM.  
 A player encrypts their choice (`0 = Heads`, `1 = Tails`) on the client using the **Relayer SDK**.  
 The contract generates its own encrypted random bit, compares privately on-chain, and exposes **only the result** (win/lose) for public decryption. Optionally, the player can reveal the contract’s flip.
 
 > **Deployed (Sepolia):** `0xd22E7A123168C63f5efEA75d197faCbd0022791C`  
-> **Frontend:** single-file `index.html` using `@zama-fhe/relayer-sdk` + `ethers v6`.
+> **Frontend:** single-file `index.html` using `@zama-fhe/relayer-sdk` + `ethers v6`.  
+> **Live Demo:** [https://flip-fhe.vercel.app/](https://flip-fhe.vercel.app/)
 
 ---
 
-## ✨ Features
+## Features
 
 - **End-to-end privacy:** player’s choice and contract’s flip are encrypted (`euint8`); only the result is public.
 - **On-chain randomness (FHE):** contract draws a private random bit and compares homomorphically.
@@ -19,7 +20,7 @@ The contract generates its own encrypted random bit, compares privately on-chain
 
 ---
 
-## 📦 Contract
+## Contract
 
 Solidity uses only:
 ```solidity
@@ -47,7 +48,7 @@ RoundPlayed(uint256 roundId, address player, bytes32 resultHandle)
 
 RandomCommitted(uint256 roundId, bytes32 randomHandle)
 
-🖥️ Frontend
+## Frontend
 
 Single-file index.html with:
 
@@ -61,7 +62,8 @@ Optional “Reveal Contract Flip” (makes flip public and decrypts it)
 
 Update the contract address in the file if you redeploy.
 
-🚀 Quickstart
+## Quickstart
+
 Prerequisites
 
 Node.js 18+
@@ -104,7 +106,7 @@ npx vite preview
 
 Open http://localhost:8080 (or the port shown).
 
-🔑 How it works (data flow)
+## How it works (data flow)
 
 Encrypt input:
 Frontend uses createInstance from @zama-fhe/relayer-sdk and calls:
@@ -123,7 +125,7 @@ Frontend does instance.publicDecrypt([resultHandle]) and renders 0/1/2.
 Optional reveal:
 makeRandomPublic(roundId), then publicDecrypt([flipHandle]).
 
-🛡️ Security & Privacy Notes
+## Security & Privacy Notes
 
 Avoid FHE ops in view/pure functions (we only return handles there).
 
@@ -136,17 +138,3 @@ FHE.allow(result, msg.sender) for private userDecrypt if needed
 FHE.makePubliclyDecryptable(result) for global readability (used for UX)
 
 euint8 supports arithmetic/comparison; do not use arithmetic on euint256/eaddress.
-
-📥 Download
-
-Download ZIP (GitHub)
-Replace with your repo slug:
-https://github.com/<your-username>/<your-repo>/archive/refs/heads/main.zip
-
-Releases page (recommended)
-https://github.com/<your-username>/<your-repo>/releases/latest
-
-
-📝 License
-
-MIT — see LICENSE.
